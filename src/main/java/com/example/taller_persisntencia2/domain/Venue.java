@@ -1,7 +1,6 @@
 package com.example.taller_persisntencia2.domain;
 
 import jakarta.persistence.*;
-import jdk.jfr.Event;
 
 import java.util.ArrayList;
 import java.util.List;
