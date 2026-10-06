@@ -35,6 +35,7 @@ public class Venue {
     @OneToMany(mappedBy = "venue")
     private List<Event> events = new ArrayList<>();
 
+
     protected Venue() {}
 
     public Venue(String code, String name, String city, String address, Integer capacity) {
