@@ -12,7 +12,6 @@ import java.util.Optional;
 
 public interface TicketRepository extends JpaRepository<Ticket, Long> {
 
-    Optional<User> findByEmailIgnoreCase(String email);
 
     Optional<Ticket> findByTicketCode(String ticketCode);
 
