@@ -21,6 +21,6 @@ class FlywayMigrationIT {
                 "SELECT COUNT(*) FROM flyway_schema_history WHERE success = true", Integer.class
         );
 
-        assertThat(appliedMigrations).isGreaterThanOrEqualTo(3);
+        assertThat(appliedMigrations).isGreaterThanOrEqualTo(4);
     }
 }
