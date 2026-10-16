@@ -15,6 +15,7 @@ import com.example.taller_persisntencia2.repository.ArtistRepository;
 import com.example.taller_persisntencia2.repository.EventRepository;
 import com.example.taller_persisntencia2.repository.VenueRepository;
 import com.example.taller_persisntencia2.service.EventService;
+import com.example.taller_persisntencia2.service.AuthorizationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,13 +29,16 @@ public class EventServiceImpl implements EventService {
     private final VenueRepository venueRepository;
     private final ArtistRepository artistRepository;
     private final EventMapper eventMapper;
+    private final AuthorizationService authorizationService;
 
     public EventServiceImpl(EventRepository eventRepository, VenueRepository venueRepository,
-                            ArtistRepository artistRepository, EventMapper eventMapper) {
+                            ArtistRepository artistRepository, EventMapper eventMapper,
+                            AuthorizationService authorizationService) {
         this.eventRepository = eventRepository;
         this.venueRepository = venueRepository;
         this.artistRepository = artistRepository;
         this.eventMapper = eventMapper;
+        this.authorizationService = authorizationService;
     }
 
     @Override
@@ -81,9 +85,14 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional(readOnly = true)
     public EventResponse findByCode(String eventCode) {
-        return eventRepository.findByEventCode(eventCode)
-                .map(eventMapper::toResponse)
+        Event event = eventRepository.findByEventCode(eventCode)
                 .orElseThrow(() -> new ResourceNotFoundException("Evento no encontrado"));
+
+        // Un evento no publicado solo lo ven STAFF/ADMIN; para el resto es como si no existiera.
+        if (event.getStatus() != EventStatus.PUBLISHED && !authorizationService.canSeeUnpublishedEvents()) {
+            throw new ResourceNotFoundException("Evento no encontrado");
+        }
+        return eventMapper.toResponse(event);
     }
 
     @Override
@@ -146,8 +155,10 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional(readOnly = true)
     public List<EventSummaryResponse> findByArtist(String stageName) {
+        boolean canSeeUnpublished = authorizationService.canSeeUnpublishedEvents();
         return eventRepository.findByArtistsStageNameIgnoreCase(stageName)
                 .stream()
+                .filter(event -> canSeeUnpublished || event.getStatus() == EventStatus.PUBLISHED)
                 .map(eventMapper::toSummary)
                 .toList();
     }

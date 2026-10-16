@@ -6,6 +6,8 @@ import com.example.taller_persisntencia2.dto.response.EventSummaryResponse;
 import java.util.List;
 
 public interface EventService {
+
+
     EventResponse create(CreateEventRequest request);
     EventResponse findByCode(String eventCode);
     List<EventSummaryResponse> findPublishedEvents();

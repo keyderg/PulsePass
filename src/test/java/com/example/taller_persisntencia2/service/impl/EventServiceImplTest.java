@@ -13,6 +13,8 @@ import com.example.taller_persisntencia2.mapper.EventMapper;
 import com.example.taller_persisntencia2.repository.ArtistRepository;
 import com.example.taller_persisntencia2.repository.EventRepository;
 import com.example.taller_persisntencia2.repository.VenueRepository;
+import com.example.taller_persisntencia2.dto.response.EventSummaryResponse;
+import com.example.taller_persisntencia2.service.AuthorizationService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -22,6 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Set;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -40,6 +43,8 @@ class EventServiceImplTest {
     private ArtistRepository artistRepository;
     @Mock
     private EventMapper eventMapper;
+    @Mock
+    private AuthorizationService authorizationService;
 
     @InjectMocks
     private EventServiceImpl eventService;
@@ -55,6 +60,7 @@ class EventServiceImplTest {
 
         when(eventRepository.findByEventCode(code)).thenReturn(Optional.of(mockEvent));
         when(eventMapper.toResponse(mockEvent)).thenReturn(expectedResponse);
+        when(authorizationService.canSeeUnpublishedEvents()).thenReturn(true);
 
         // ACT
         EventResponse result = eventService.findByCode(code);
@@ -160,5 +166,67 @@ class EventServiceImplTest {
 
         // ASSERT
         verify(eventRepository, never()).save(any(Event.class));
+    }
+
+    private Event eventWithStatus(String code, EventStatus status) {
+        return new Event(code, "Fest", EventCategory.MUSIC, status, LocalDateTime.now().plusDays(10),
+                new Venue("VEN-01", "Arena", "Ciudad", "Dir", 1000));
+    }
+
+    @Test
+    void findByCode_draftIsHiddenAsNotFoundForNonPrivileged() {
+        Event draft = eventWithStatus("EV-DRAFT", EventStatus.DRAFT);
+        when(eventRepository.findByEventCode("EV-DRAFT")).thenReturn(Optional.of(draft));
+        when(authorizationService.canSeeUnpublishedEvents()).thenReturn(false);
+
+        assertThatThrownBy(() -> eventService.findByCode("EV-DRAFT"))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage("Evento no encontrado");
+
+        verify(eventMapper, never()).toResponse(any(Event.class));
+    }
+
+    @Test
+    void findByCode_publishedIsVisibleToEveryoneWithoutCheckingRoles() {
+        Event published = eventWithStatus("EV-PUB", EventStatus.PUBLISHED);
+        EventResponse response = new EventResponse(1L, "EV-PUB", "Fest", "Desc", EventCategory.MUSIC,
+                EventStatus.PUBLISHED, LocalDateTime.now().plusDays(10), 18, "VEN-01", "Arena", Set.of());
+        when(eventRepository.findByEventCode("EV-PUB")).thenReturn(Optional.of(published));
+        when(eventMapper.toResponse(published)).thenReturn(response);
+
+        assertThat(eventService.findByCode("EV-PUB")).isEqualTo(response);
+
+        verify(authorizationService, never()).canSeeUnpublishedEvents();
+    }
+
+    @Test
+    void findByArtist_nonPrivilegedOnlySeesPublished() {
+        Event draft = eventWithStatus("EV-DRAFT", EventStatus.DRAFT);
+        Event published = eventWithStatus("EV-PUB", EventStatus.PUBLISHED);
+        EventSummaryResponse summary = new EventSummaryResponse("EV-PUB", "Fest", EventStatus.PUBLISHED,
+                LocalDateTime.now().plusDays(10), "Arena");
+        when(eventRepository.findByArtistsStageNameIgnoreCase("Solar Beat")).thenReturn(List.of(draft, published));
+        when(authorizationService.canSeeUnpublishedEvents()).thenReturn(false);
+        when(eventMapper.toSummary(published)).thenReturn(summary);
+
+        assertThat(eventService.findByArtist("Solar Beat")).containsExactly(summary);
+
+        verify(eventMapper, never()).toSummary(draft);
+    }
+
+    @Test
+    void findByArtist_privilegedSeesAllStatuses() {
+        Event draft = eventWithStatus("EV-DRAFT", EventStatus.DRAFT);
+        Event published = eventWithStatus("EV-PUB", EventStatus.PUBLISHED);
+        EventSummaryResponse draftSummary = new EventSummaryResponse("EV-DRAFT", "Fest", EventStatus.DRAFT,
+                LocalDateTime.now().plusDays(10), "Arena");
+        EventSummaryResponse pubSummary = new EventSummaryResponse("EV-PUB", "Fest", EventStatus.PUBLISHED,
+                LocalDateTime.now().plusDays(10), "Arena");
+        when(eventRepository.findByArtistsStageNameIgnoreCase("Solar Beat")).thenReturn(List.of(draft, published));
+        when(authorizationService.canSeeUnpublishedEvents()).thenReturn(true);
+        when(eventMapper.toSummary(draft)).thenReturn(draftSummary);
+        when(eventMapper.toSummary(published)).thenReturn(pubSummary);
+
+        assertThat(eventService.findByArtist("Solar Beat")).containsExactly(draftSummary, pubSummary);
     }
 }

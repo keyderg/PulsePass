@@ -40,15 +40,17 @@ public class SecurityConfig {
                         // Públicas
                         .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/users").permitAll()
                         .requestMatchers(HttpMethod.GET,
-                                "/api/events/published", "/api/artists/**", "/api/venues/**").permitAll()
+                                "/api/events/published", "/api/events/by-artist", "/api/events/*",
+                                "/api/artists/**", "/api/venues/**").permitAll()
                         // ADMIN
                         .requestMatchers(HttpMethod.POST, "/api/events").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/events/*/publish").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/events/*/artists/*").hasRole("ADMIN")
                         // STAFF o ADMIN
                         .requestMatchers(HttpMethod.PATCH, "/api/tickets/*/use").hasAnyRole("STAFF", "ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/events/*/tickets/paid").hasAnyRole("STAFF", "ADMIN")
-                        // Todo lo demás exige token válido (la propiedad de tickets y usuarios, en la etapa 7)
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/events/published", "/api/events/by-artist", "/api/events/*",
+                                "/api/artists/**", "/api/venues/**").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 

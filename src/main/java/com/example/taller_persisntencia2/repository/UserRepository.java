@@ -34,4 +34,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
             where u.username = :identifier or lower(u.email) = lower(:identifier)
             """)
     List<AuthUserRow> findAuthRowsByIdentifier(@Param("identifier") String identifier);
+
+    @Query("select u.id from User u where lower(u.email) = lower(:email)")
+    Optional<Long> findIdByEmail(@Param("email") String email);
+
+    @Query("select u.id from User u where u.username = :username")
+    Optional<Long> findIdByUsername(@Param("username") String username);
 }
