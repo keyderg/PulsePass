@@ -276,4 +276,25 @@ class OwnershipSecurityIT {
                 .andExpect(status().isOk())
                 .andExpect(content().json("[]"));
     }
+
+    // T-SEC-013 / UC-SEC-07: STAFF usa un ticket válido; la segunda vez la regla de negocio lo rechaza
+    @Test
+    void staffMarksAValidTicketAsUsedAndASecondUseIsRejected() throws Exception {
+        patch("/api/tickets/" + carlosTicket + "/use", staffToken).andExpect(status().isOk());
+        assertThat(statusOf(carlosTicket)).isEqualTo(TicketStatus.USED);
+
+        patch("/api/tickets/" + carlosTicket + "/use", staffToken).andExpect(status().isConflict());
+    }
+
+    // T-SEC-014 / UC-SEC-08: un USER no publica; un ADMIN sí, y entonces el evento pasa a ser público
+    @Test
+    void adminPublishesADraftEventAndUserCannot() throws Exception {
+        patch("/api/events/EV-DRAFT/publish", andreaToken)
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value(FORBIDDEN));
+        get("/api/events/EV-DRAFT", null).andExpect(status().isNotFound()); // sigue siendo borrador
+
+        patch("/api/events/EV-DRAFT/publish", adminToken).andExpect(status().isOk());
+        get("/api/events/EV-DRAFT", null).andExpect(status().isOk());      // ahora cualquiera lo ve
+    }
 }

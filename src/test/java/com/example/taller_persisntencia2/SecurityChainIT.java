@@ -30,6 +30,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -278,5 +279,49 @@ class SecurityChainIT {
                         .content("{\"identifier\":\"sec_wrongpass\",\"password\":\"OtraClaveDistinta1!\"}"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.message").value("Credenciales inválidas"));
+    }
+
+    @Test
+    void paidTicketsListIsOnlyForStaffAndAdmin() throws Exception {
+        String user = tokenFor("sec_paid_user", null);
+        String staff = tokenFor("sec_paid_staff", Role.STAFF);
+
+        mockMvc.perform(get("/api/events/NO-EXISTE/tickets/paid"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/events/NO-EXISTE/tickets/paid")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(user)))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/events/NO-EXISTE/tickets/paid")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(staff)))
+                .andExpect(notDenied());
+    }
+
+    // T-SEC-019: ningún error devuelve stack traces, contraseñas ni hashes
+    @Test
+    void errorResponsesNeverLeakStackTracesPasswordsOrHashes() throws Exception {
+        register("sec_leak");
+        String wrongPassword = "OtraClaveDistinta1!";
+
+        String loginBody = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"identifier\":\"sec_leak\",\"password\":\"" + wrongPassword + "\"}"))
+                .andExpect(status().isUnauthorized())
+                .andReturn().getResponse().getContentAsString();
+
+        String badTokenBody = mockMvc.perform(get("/api/auth/me")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer abc.def.ghi"))
+                .andExpect(status().isUnauthorized())
+                .andReturn().getResponse().getContentAsString();
+
+        String forbiddenBody = mockMvc.perform(post("/api/events")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(tokenFor("sec_leak_user", null)))
+                        .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isForbidden())
+                .andReturn().getResponse().getContentAsString();
+
+        for (String body : List.of(loginBody, badTokenBody, forbiddenBody)) {
+            assertThat(body).doesNotContain(PASSWORD, wrongPassword, "$2a$", "$2b$",
+                    "Exception", "stackTrace", "at com.example");
+        }
     }
 }

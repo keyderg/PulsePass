@@ -31,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AuthController.class)
-class AuthControllerTest {
+class AuthControllerTest extends SecuredControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -103,7 +103,7 @@ class AuthControllerTest {
                 .thenReturn(new AuthenticatedUserResponse(5L, "andrea", List.of("USER")));
 
         mockMvc.perform(get("/api/auth/me")
-                        .principal(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities())))
+                        .with(identity(5L, "andrea", "USER")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(5))
                 .andExpect(jsonPath("$.username").value("andrea"))
@@ -113,7 +113,8 @@ class AuthControllerTest {
     @Test
     void me_withoutAuthentication_returns401() throws Exception {
         mockMvc.perform(get("/api/auth/me"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value("Autenticación requerida"));
 
         verify(authService, never()).currentUser(any());
     }

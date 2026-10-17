@@ -27,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.example.taller_persisntencia2.service.AuthService;
 
 @WebMvcTest(UserController.class)
-class UserControllerTest {
+class UserControllerTest extends SecuredControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -155,7 +155,7 @@ class UserControllerTest {
     void findByEmail_existingUser_returns200() throws Exception {
         when(userService.findByEmail("andrea@example.com")).thenReturn(andrea());
 
-        mockMvc.perform(get("/api/users/by-email").param("email", "andrea@example.com"))
+        mockMvc.perform(get("/api/users/by-email").with(asUser()).param("email", "andrea@example.com"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.email").value("andrea@example.com"))
@@ -170,7 +170,7 @@ class UserControllerTest {
         when(userService.findByEmail("nadie@example.com"))
                 .thenThrow(new ResourceNotFoundException("User not found: nadie@example.com"));
 
-        mockMvc.perform(get("/api/users/by-email").param("email", "nadie@example.com"))
+        mockMvc.perform(get("/api/users/by-email").with(asUser()).param("email", "nadie@example.com"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.message").value("User not found: nadie@example.com"));
@@ -181,7 +181,7 @@ class UserControllerTest {
     // Extra: falta el parámetro email
     @Test
     void findByEmail_missingParam_returns400WithoutCallingService() throws Exception {
-        mockMvc.perform(get("/api/users/by-email"))
+        mockMvc.perform(get("/api/users/by-email").with(asUser()))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.details.email").value("Parameter is required"));
 
@@ -193,7 +193,7 @@ class UserControllerTest {
     void findByUsername_existingUser_returns200() throws Exception {
         when(userService.findByUsername("andrea")).thenReturn(andrea());
 
-        mockMvc.perform(get("/api/users/by-username").param("username", "andrea"))
+        mockMvc.perform(get("/api/users/by-username").with(asUser()).param("username", "andrea"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.username").value("andrea"))
@@ -208,7 +208,7 @@ class UserControllerTest {
         when(userService.findByUsername("nadie"))
                 .thenThrow(new ResourceNotFoundException("User not found: nadie"));
 
-        mockMvc.perform(get("/api/users/by-username").param("username", "nadie"))
+        mockMvc.perform(get("/api/users/by-username").with(asUser())    .param("username", "nadie"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("User not found: nadie"));
 
@@ -240,5 +240,15 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.details.password").value("Password must not exceed 72 bytes"));
 
         verify(authService, never()).register(any());
+    }
+
+    @Test
+    void security_anonymous_cannotLookUpUsers_gets401() throws Exception {
+        mockMvc.perform(get("/api/users/by-email").param("email", "andrea@example.com"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/users/by-username").param("username", "andrea"))
+                .andExpect(status().isUnauthorized());
+
+        org.mockito.Mockito.verifyNoInteractions(userService);
     }
 }
