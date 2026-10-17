@@ -8,6 +8,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
+
 @SpringBootTest
 @Import(TestcontainersConfiguration.class)
 class FlywayMigrationIT {
@@ -21,6 +23,10 @@ class FlywayMigrationIT {
                 "SELECT COUNT(*) FROM flyway_schema_history WHERE success = true", Integer.class
         );
 
-        assertThat(appliedMigrations).isGreaterThanOrEqualTo(4);
+        List<String> versions = jdbcTemplate.queryForList(
+                "SELECT version FROM flyway_schema_history WHERE success = true ORDER BY installed_rank",
+                String.class);
+
+        assertThat(versions).containsExactly("1", "2", "3", "4");
     }
 }

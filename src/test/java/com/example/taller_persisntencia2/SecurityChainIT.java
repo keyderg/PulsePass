@@ -81,6 +81,7 @@ class SecurityChainIT {
         return result -> assertThat(result.getResponse().getStatus()).isNotIn(401, 403);
     }
 
+    //Anónimo accede a las rutas públicas
     @Test
     void anonymousCanReadPublicRoutes() throws Exception {
         mockMvc.perform(get("/api/events/published")).andExpect(status().isOk());
@@ -88,6 +89,7 @@ class SecurityChainIT {
         mockMvc.perform(get("/api/artists/active")).andExpect(status().isOk());
     }
 
+    //Anónimo en ruta protegida: 401 con ErrorResponse
     @Test
     void anonymousOnProtectedRouteGets401WithErrorResponse() throws Exception {
         mockMvc.perform(post("/api/events").contentType(MediaType.APPLICATION_JSON).content("{}"))
@@ -100,6 +102,7 @@ class SecurityChainIT {
                 .andExpect(jsonPath("$.details").isEmpty());
     }
 
+    //USER en ruta ADMIN: 403 con ErrorResponse
     @Test
     void userRoleOnAdminRouteGets403WithErrorResponse() throws Exception {
         String token = tokenFor("sec_user", null);
@@ -114,6 +117,7 @@ class SecurityChainIT {
                 .andExpect(jsonPath("$.details").isEmpty());
     }
 
+    //ADMIN pasa el control de rol en ruta ADMIN
     @Test
     void adminPassesTheRoleCheckOnAdminRoute() throws Exception {
         String token = tokenFor("sec_admin", Role.ADMIN);
@@ -148,6 +152,7 @@ class SecurityChainIT {
                 .andExpect(header().doesNotExist("Set-Cookie"));
     }
 
+    //Token vencido: 401
     @Test
     void expiredTokenGets401() throws Exception {
         UserResponse user = register("sec_expired");
@@ -160,6 +165,7 @@ class SecurityChainIT {
                 .andExpect(jsonPath("$.status").value(401));
     }
 
+    //	Token manipulado: 401
     @Test
     void tamperedTokenGets401() throws Exception {
         UserResponse user = register("sec_tampered");
@@ -171,6 +177,7 @@ class SecurityChainIT {
                 .andExpect(status().isUnauthorized());
     }
 
+    //Bearer malformado: 401, nunca 500
     @Test
     void malformedBearerGets401NotServerError() throws Exception {
         mockMvc.perform(get("/api/auth/me").header(HttpHeaders.AUTHORIZATION, "Bearer abc.def.ghi"))
@@ -210,6 +217,7 @@ class SecurityChainIT {
                 .andExpect(status().isOk());
     }
 
+    //Usuario desactivado pierde acceso en el siguiente request
     @Test
     void tokenOfInactiveUserGets401() throws Exception {
         UserResponse registered = register("sec_inactive");
@@ -237,6 +245,7 @@ class SecurityChainIT {
                 .andExpect(status().isUnauthorized());
     }
 
+    //	Flujo completo: registro, login y /me
     @Test
     void fullFlowRegisterLoginAndMe() throws Exception {
         mockMvc.perform(post("/api/users").contentType(MediaType.APPLICATION_JSON).content("""
@@ -270,6 +279,7 @@ class SecurityChainIT {
                 .andExpect(jsonPath("$.username").value("flow_user"));
     }
 
+    //Login incorrecto: 401 genérico
     @Test
     void loginWithWrongPasswordGetsGeneric401() throws Exception {
         register("sec_wrongpass");
@@ -281,6 +291,7 @@ class SecurityChainIT {
                 .andExpect(jsonPath("$.message").value("Credenciales inválidas"));
     }
 
+    //Lista de tickets pagados solo STAFF o ADMIN
     @Test
     void paidTicketsListIsOnlyForStaffAndAdmin() throws Exception {
         String user = tokenFor("sec_paid_user", null);

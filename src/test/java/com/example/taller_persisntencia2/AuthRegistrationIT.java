@@ -69,6 +69,7 @@ class AuthRegistrationIT {
                 .containsExactly(Role.USER);
     }
 
+    //Registro atómico: si falla la credencial, no queda usuario
     @Test
     void registerShouldRollbackUserWhenCredentialCreationFails() {
         doThrow(new IllegalStateException("fallo simulado")).when(passwordEncoder).encode(any());

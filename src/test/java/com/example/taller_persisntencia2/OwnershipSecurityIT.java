@@ -132,8 +132,8 @@ class OwnershipSecurityIT {
         return ticketRepository.findByTicketCode(code).orElseThrow().getStatus();
     }
 
-    // ---------- Tickets por código: ajeno = 404 ----------
 
+    //Ticket ajeno responde 404, como si no existiera
     @Test
     void foreignTicketReadLooksLikeNonExistent() throws Exception {
         get("/api/tickets/" + carlosTicket, andreaToken)
@@ -206,6 +206,7 @@ class OwnershipSecurityIT {
         get("/api/tickets/by-user?email=" + CARLOS_EMAIL, adminToken).andExpect(status().isOk());
     }
 
+    //by-email y by-username: propio usuario o ADMIN
     @Test
     void userLookupsAreSelfOrAdminOnly() throws Exception {
         get("/api/users/by-email?email=" + ANDREA_EMAIL, andreaToken).andExpect(status().isOk());
@@ -223,6 +224,7 @@ class OwnershipSecurityIT {
                 + TicketType.values()[0].name() + "\"}";
     }
 
+    //Comprar con el correo de otro: 403 y no se crea nada
     @Test
     void purchaseForAnotherEmailIsForbiddenAndCreatesNothing() throws Exception {
         int before = ticketRepository.findByUserEmailIgnoreCaseOrderByPurchaseDateDesc(CARLOS_EMAIL).size();
@@ -252,8 +254,7 @@ class OwnershipSecurityIT {
                 .andExpect(status().isUnauthorized());
     }
 
-    // ---------- Visibilidad de borradores ----------
-
+    //Borrador visible solo para STAFF y ADMIN
     @Test
     void draftEventLooksNonExistentExceptForStaffAndAdmin() throws Exception {
         get("/api/events/EV-PUB", null).andExpect(status().isOk());
@@ -277,7 +278,7 @@ class OwnershipSecurityIT {
                 .andExpect(content().json("[]"));
     }
 
-    // T-SEC-013 / UC-SEC-07: STAFF usa un ticket válido; la segunda vez la regla de negocio lo rechaza
+    // STAFF usa un ticket válido; la segunda vez la regla de negocio lo rechaza
     @Test
     void staffMarksAValidTicketAsUsedAndASecondUseIsRejected() throws Exception {
         patch("/api/tickets/" + carlosTicket + "/use", staffToken).andExpect(status().isOk());
@@ -286,7 +287,7 @@ class OwnershipSecurityIT {
         patch("/api/tickets/" + carlosTicket + "/use", staffToken).andExpect(status().isConflict());
     }
 
-    // T-SEC-014 / UC-SEC-08: un USER no publica; un ADMIN sí, y entonces el evento pasa a ser público
+    // un USER no publica; un ADMIN sí, y entonces el evento pasa a ser público
     @Test
     void adminPublishesADraftEventAndUserCannot() throws Exception {
         patch("/api/events/EV-DRAFT/publish", andreaToken)
