@@ -1,23 +1,19 @@
 package com.example.taller_persisntencia2.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;   // ver nota
-import jakarta.validation.constraints.AssertTrue;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import com.example.taller_persisntencia2.validation.MaxUtf8Bytes;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.validation.constraints.*;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 
 public record RegisterUserRequest(
-
         @NotBlank(message = "Username is required")
         @Size(max = 50, message = "Username must not exceed 50 characters")
         String username,
 
         @NotBlank(message = "Email is required")
-        @Email(message = "Email format is invalid")
+        @Email(message = "Email must be valid")
         @Size(max = 150, message = "Email must not exceed 150 characters")
         String email,
 
@@ -39,7 +35,8 @@ public record RegisterUserRequest(
         LocalDate birthDate,
 
         @NotBlank(message = "Password is required")
-        @Size(min = 12, max = 72, message = "Password must be between 12 and 72 characters")
+        @Size(min = 12, message = "Password must be at least 12 characters")
+        @MaxUtf8Bytes(value = 72, message = "Password must not exceed 72 bytes")
         String password
 ) {
 

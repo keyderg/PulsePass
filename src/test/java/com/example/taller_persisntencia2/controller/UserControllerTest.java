@@ -230,6 +230,21 @@ class UserControllerTest extends SecuredControllerTest {
     }
 
     @Test
+    void register_usernameTooLong_returns400WithoutCallingService() throws Exception {
+        String json = VALID_JSON.replace(
+                "\"username\": \"andrea\"",
+                "\"username\": \"" + "a".repeat(51) + "\"");
+
+        mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.username").exists());
+
+        verify(authService, never()).register(any());
+    }
+
+    @Test
     void register_passwordOver72Bytes_returns400WithoutCallingService() throws Exception {
         String json = VALID_JSON.replace("ClaveDePrueba2026!", "a".repeat(73));
 

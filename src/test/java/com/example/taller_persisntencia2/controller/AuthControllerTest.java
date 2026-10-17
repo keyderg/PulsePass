@@ -96,6 +96,32 @@ class AuthControllerTest extends SecuredControllerTest {
     }
 
     @Test
+    void login_identifierTooLong_returns400WithoutCallingService() throws Exception {
+        String json = "{\"identifier\":\"" + "a".repeat(151) + "\",\"password\":\"x\"}";
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.identifier").exists());
+
+        verify(authService, never()).login(any());
+    }
+
+    @Test
+    void login_passwordTooLong_returns400WithoutCallingService() throws Exception {
+        String json = "{\"identifier\":\"andrea\",\"password\":\"" + "a".repeat(129) + "\"}";
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.password").exists());
+
+        verify(authService, never()).login(any());
+    }
+
+    @Test
     void me_authenticatedPrincipal_returns200() throws Exception {
         SecurityPrincipal principal = new SecurityPrincipal(5L, "andrea", null,
                 List.<GrantedAuthority>of(new SimpleGrantedAuthority("ROLE_USER")), true);

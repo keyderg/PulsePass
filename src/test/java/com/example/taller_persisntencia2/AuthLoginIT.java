@@ -95,4 +95,12 @@ class AuthLoginIT {
         assertThatThrownBy(() -> authService.login(new LoginRequest("login_legacy", PASSWORD)))
                 .isInstanceOf(BadCredentialsException.class);
     }
+
+    @Test
+    void passwordLongerThan72BytesShouldFailWithBadCredentialsNotServerError() {
+        register("login_longpass");
+
+        assertThatThrownBy(() -> authService.login(new LoginRequest("login_longpass", "a".repeat(100))))
+                .isInstanceOf(BadCredentialsException.class);
+    }
 }
