@@ -356,7 +356,9 @@ Una clase individual:
 |---|---|---|
 | Unitarias (JUnit 5 y Mockito) | `JwtServiceTest`, `JwtAuthenticationFilterTest`, `CustomUserDetailsServiceTest`, `AuthServiceImplTest`, `AuthorizationServiceImplTest`, `EventServiceImplTest`, `TicketServiceImplTest`, `UserServiceImplTest` | Firma, vencimiento, emisor y manipulación del JWT; filtro Bearer; propiedad de recursos; registro y login |
 | Controller con seguridad real (MockMvc) | `*ControllerTest`, `SecurityMatrixTest`, `GlobalExceptionHandlerTest` | Códigos 200/201/400/401/403/404/409 y la matriz de las 20 rutas por anónimo, USER, STAFF y ADMIN, sin deshabilitar los filtros |
-| Integración con PostgreSQL (Testcontainers) | `*IT` (`SecurityMigrationIT`, `AuthLoginIT`, `AuthRegistrationIT`, `OwnershipSecurityIT`, `SecurityChainIT`, `CustomUserDetailsServiceIT` y las de persistencia) | restricciones de la base, registro atómico, login real, tokens vencidos o alterados, usuario desactivado y propiedad de tickets | `FlywayMigrationIT` verifica que Flyway aplica con éxito al menos 4 migraciones (V1 a V4) sobre una base PostgreSQL limpia. El detalle de la V4 (columnas, restricciones y `CHECK` de roles) lo comprueba `SecurityMigrationIT`.
+| Integración con PostgreSQL (Testcontainers) | `*IT` (`SecurityMigrationIT`, `AuthLoginIT`, `AuthRegistrationIT`, `OwnershipSecurityIT`, `SecurityChainIT`, `CustomUserDetailsServiceIT` y las de persistencia) | flyway, restricciones de la base, registro atómico, login real, tokens vencidos o alterados, usuario desactivado y propiedad de tickets | 
+
+`FlywayMigrationIT` verifica que Flyway aplica con éxito al menos 4 migraciones (V1 a V4) sobre una base PostgreSQL limpia. El detalle de la V4 (columnas, restricciones y `CHECK` de roles) lo comprueba `SecurityMigrationIT`.
 
 ## Validación de entrada
 

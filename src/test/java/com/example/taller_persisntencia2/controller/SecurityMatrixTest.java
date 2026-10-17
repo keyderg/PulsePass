@@ -43,7 +43,7 @@ class SecurityMatrixTest extends SecuredControllerTest {
     private static final String FORBIDDEN_MESSAGE = "No tiene permisos para realizar esta operación";
 
     /** Quién puede llamar a la ruta, a nivel de URL. */
-    enum Access { PUBLIC, AUTHENTICATED, STAFF_OR_ADMIN, ADMIN }
+    enum Access { PUBLIC, AUTHENTICATED, STAFF_OR_ADMIN, ADMIN, USER_ONLY }
 
     record Operation(String id, HttpMethod method, String pattern, String url, Access access) {
         @Override
@@ -73,7 +73,7 @@ class SecurityMatrixTest extends SecuredControllerTest {
                 new Operation("FR-SECUSR-02", HttpMethod.GET, "/api/users/by-email", "/api/users/by-email?email=andrea@test.com", Access.AUTHENTICATED),
                 new Operation("FR-SECUSR-03", HttpMethod.GET, "/api/users/by-username", "/api/users/by-username?username=andrea", Access.AUTHENTICATED),
                 // Ticket (la propiedad se comprueba en el servicio)
-                new Operation("FR-SECTKT-01", HttpMethod.POST, "/api/tickets", "/api/tickets", Access.AUTHENTICATED),
+                new Operation("FR-SECTKT-01", HttpMethod.POST, "/api/tickets", "/api/tickets", Access.USER_ONLY),
                 new Operation("FR-SECTKT-02", HttpMethod.GET, "/api/tickets/{}", "/api/tickets/TKT-0001", Access.AUTHENTICATED),
                 new Operation("FR-SECTKT-03", HttpMethod.GET, "/api/tickets/by-user", "/api/tickets/by-user?email=andrea@test.com", Access.AUTHENTICATED),
                 new Operation("FR-SECTKT-04", HttpMethod.GET, "/api/events/{}/tickets/paid", "/api/events/CMF-2026/tickets/paid", Access.STAFF_OR_ADMIN),
@@ -152,7 +152,7 @@ class SecurityMatrixTest extends SecuredControllerTest {
     void staffRole(Operation op) throws Exception {
         ResultActions result = mockMvc.perform(request(op).with(asStaff()));
 
-        if (op.access() == Access.ADMIN) {
+        if (op.access() == Access.ADMIN || op.access() == Access.USER_ONLY) {
             expectForbidden(result);
         } else {
             result.andExpect(notDenied());
@@ -162,9 +162,14 @@ class SecurityMatrixTest extends SecuredControllerTest {
     @ParameterizedTest(name = "[ADMIN] {0}")
     @MethodSource("operations")
     void adminRole(Operation op) throws Exception {
-        mockMvc.perform(request(op).with(asAdmin())).andExpect(notDenied());
-    }
+        ResultActions result = mockMvc.perform(request(op).with(asAdmin()));
 
+        if (op.access() == Access.USER_ONLY) {
+            expectForbidden(result);
+        } else {
+            result.andExpect(notDenied());
+        }
+    }
     /**
      * Si alguien agrega un endpoint a la API y no lo agrega a la matriz, este test falla.
      * /api/auth/login y /api/auth/me son nuevos de la Fase 4 y tienen sus propias pruebas.
