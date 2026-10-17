@@ -72,6 +72,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex) {
+        log.warn("Acceso denegado por regla de autorización");
         return build(HttpStatus.FORBIDDEN, "No tiene permisos para realizar esta operación", Map.of());
     }
 
