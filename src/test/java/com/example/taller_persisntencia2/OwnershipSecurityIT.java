@@ -133,15 +133,18 @@ class OwnershipSecurityIT {
     }
 
 
-    //Ticket ajeno responde 404, como si no existiera
+    // Ticket ajeno y ticket inexistente responden 403 Forbidden
     @Test
     void foreignTicketReadLooksLikeNonExistent() throws Exception {
         get("/api/tickets/" + carlosTicket, andreaToken)
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Ticket no encontrado"));
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value(FORBIDDEN));
+
         get("/api/tickets/NO-EXISTE", andreaToken)
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Ticket no encontrado"));
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value(FORBIDDEN));
+
+        get("/api/tickets/NO-EXISTE", adminToken).andExpect(status().isNotFound());
     }
 
     @Test
@@ -160,8 +163,8 @@ class OwnershipSecurityIT {
     @Test
     void foreignCancelIsHiddenAndDoesNotChangeTheTicket() throws Exception {
         patch("/api/tickets/" + carlosTicket + "/cancel", andreaToken)
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Ticket no encontrado"));
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value(FORBIDDEN));
 
         assertThat(statusOf(carlosTicket)).isEqualTo(TicketStatus.PAID);
     }
@@ -175,7 +178,7 @@ class OwnershipSecurityIT {
 
     @Test
     void staffCannotCancelOthersTicketButAdminCan() throws Exception {
-        patch("/api/tickets/" + carlosTicket + "/cancel", staffToken).andExpect(status().isNotFound());
+        patch("/api/tickets/" + carlosTicket + "/cancel", staffToken).andExpect(status().isForbidden());
         assertThat(statusOf(carlosTicket)).isEqualTo(TicketStatus.PAID);
 
         patch("/api/tickets/" + carlosTicket + "/cancel", adminToken).andExpect(status().isOk());

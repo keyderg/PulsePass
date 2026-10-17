@@ -1,6 +1,5 @@
 package com.example.taller_persisntencia2.service.impl;
 
-import com.example.taller_persisntencia2.exception.ResourceNotFoundException;
 import com.example.taller_persisntencia2.repository.TicketRepository;
 import com.example.taller_persisntencia2.repository.UserRepository;
 import com.example.taller_persisntencia2.security.SecurityPrincipal;
@@ -22,7 +21,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -115,21 +113,19 @@ class AuthorizationServiceImplTest {
     }
 
     @Test
-    void canViewTicket_userOnSomeoneElsesTicket_looksLikeNotFound() {
+    void canViewTicket_userOnSomeoneElsesTicket_isfalse() {
         loginAs(2L, "USER");
         when(ticketRepository.findOwnerIdByTicketCode("T-1")).thenReturn(Optional.of(1L));
 
-        assertThatThrownBy(() -> authorizationService.canViewTicket("T-1"))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("Ticket no encontrado");
+        assertThat(authorizationService.canViewTicket("T-1")).isFalse();
     }
 
     @Test
-    void canViewTicket_nonExistentTicket_isTrueSoTheServiceAnswersItsOwn404() {
+    void canViewTicket_nonExistentTicketForUser_isFalse() {
         loginAs(2L, "USER");
         when(ticketRepository.findOwnerIdByTicketCode("NO-EXISTE")).thenReturn(Optional.empty());
 
-        assertThat(authorizationService.canViewTicket("NO-EXISTE")).isTrue();
+        assertThat(authorizationService.canViewTicket("NO-EXISTE")).isFalse();
     }
 
     @Test
@@ -153,16 +149,14 @@ class AuthorizationServiceImplTest {
     }
 
     @Test
-    void canCancelTicket_staffAndUserOnSomeoneElsesTicket_lookLikeNotFound() {
+    void canCancelTicket_staffAndUserOnSomeoneElsesTicket_areDenied() {
         when(ticketRepository.findOwnerIdByTicketCode("T-1")).thenReturn(Optional.of(1L));
 
         loginAs(9L, "STAFF");
-        assertThatThrownBy(() -> authorizationService.canCancelTicket("T-1"))
-                .isInstanceOf(ResourceNotFoundException.class);
+        assertThat(authorizationService.canCancelTicket("T-1")).isFalse();
 
         loginAs(2L, "USER");
-        assertThatThrownBy(() -> authorizationService.canCancelTicket("T-1"))
-                .isInstanceOf(ResourceNotFoundException.class);
+        assertThat(authorizationService.canCancelTicket("T-1")).isFalse();
     }
 
     // ---------- eventos no publicados ----------

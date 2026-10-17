@@ -1,6 +1,5 @@
 package com.example.taller_persisntencia2.service;
 
-import com.example.taller_persisntencia2.exception.ResourceNotFoundException;
 import com.example.taller_persisntencia2.repository.TicketRepository;
 import com.example.taller_persisntencia2.repository.UserRepository;
 import com.example.taller_persisntencia2.security.SecurityPrincipal;
@@ -59,17 +58,14 @@ public class AuthorizationService {
     private boolean canAccessTicket(String ticketCode, String... privilegedRoles) {
         Optional<SecurityPrincipal> principal = currentPrincipal();
         if (principal.isEmpty()) {
-            return false; // sin identidad (en la práctica la ruta ya exige token)
+            return false; // sin identidad
         }
-        Optional<Long> ownerId = ticketRepository.findOwnerIdByTicketCode(ticketCode);
-        if (ownerId.isEmpty()) {
-            return true; // no existe: que el Service responda su 404 normal
-        }
-        if (ownerId.get().equals(principal.get().getId()) || hasAnyRole(privilegedRoles)) {
-            return true;
-        }
-        // Ajeno: mismo mensaje que cuando el ticket no existe, para no revelar que existe.
-        throw new ResourceNotFoundException("Ticket no encontrado");
+        boolean isOwner = ticketRepository.findOwnerIdByTicketCode(ticketCode)
+                .filter(ownerId -> ownerId.equals(principal.get().getId()))
+                .isPresent();
+        // Dueño, o rol privilegiado (si el ticket no existe, el Service responde su 404).
+        // Ajeno o inexistente para un USER => false => 403.
+        return isOwner || hasAnyRole(privilegedRoles);
     }
 
     private boolean isPrincipal(Optional<Long> requestedUserId) {
