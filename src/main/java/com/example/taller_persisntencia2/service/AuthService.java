@@ -82,7 +82,7 @@ public class AuthService {
         Authentication authentication;
         try {
             authentication = authenticationManager.authenticate(
-                    UsernamePasswordAuthenticationToken.unauthenticated(request.identifier(), request.password()));
+                    UsernamePasswordAuthenticationToken.unauthenticated(request.identifier().strip(), request.password()));
         } catch (AuthenticationException e) {
             log.warn("Login fallido"); // sin identifier: a veces la gente escribe la contraseña en ese campo
             throw e;

@@ -143,6 +143,21 @@ class AuthServiceImplTest {
     }
 
     @Test
+    void login_trimsIdentifierBeforeAuthenticating() {
+        SecurityPrincipal principal = principal(7L, "USER");
+        when(authenticationManager.authenticate(any()))
+                .thenReturn(UsernamePasswordAuthenticationToken.authenticated(principal, null, principal.getAuthorities()));
+        when(jwtService.generateToken(7L)).thenReturn("jwt-de-prueba");
+        when(jwtService.getAccessTokenTtlSeconds()).thenReturn(900L);
+
+        authService.login(new LoginRequest("  andrea  ", PASSWORD));
+
+        ArgumentCaptor<Authentication> sent = ArgumentCaptor.forClass(Authentication.class);
+        verify(authenticationManager).authenticate(sent.capture());
+        assertThat(sent.getValue().getPrincipal()).isEqualTo("andrea");
+    }
+
+    @Test
     void login_wrongPassword_propagatesAndNeverIssuesToken() {
         when(authenticationManager.authenticate(any())).thenThrow(new BadCredentialsException("detalle interno"));
 
