@@ -33,7 +33,7 @@ import static org.mockito.Mockito.*;
 
 // NFR-001: Pruebas sin Spring ApplicationContext ni PostgreSQL[cite: 25, 27, 32]
 @ExtendWith(MockitoExtension.class)
-class EventServiceImplTest {
+class   EventServiceImplTest {
 
     @Mock
     private EventRepository eventRepository;
@@ -180,6 +180,19 @@ class EventServiceImplTest {
         when(authorizationService.canSeeUnpublishedEvents()).thenReturn(false);
 
         assertThatThrownBy(() -> eventService.findByCode("EV-DRAFT"))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage("Evento no encontrado");
+
+        verify(eventMapper, never()).toResponse(any(Event.class));
+    }
+
+    @Test
+    void findByCode_soldOutEvent_isHiddenFromThePublic() {
+        Event draft = eventWithStatus("EV-SOLD", EventStatus.SOLD_OUT);
+        when(eventRepository.findByEventCode("EV-SOLD")).thenReturn(Optional.of(draft));
+        when(authorizationService.canSeeUnpublishedEvents()).thenReturn(false);
+
+        assertThatThrownBy(() -> eventService.findByCode("EV-SOLD"))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Evento no encontrado");
 

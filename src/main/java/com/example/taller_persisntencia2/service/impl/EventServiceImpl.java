@@ -20,11 +20,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class EventServiceImpl implements EventService {
 
+    private static final Set<EventStatus> PUBLIC_STATUSES = EnumSet.of(EventStatus.PUBLISHED);
     private final EventRepository eventRepository;
     private final VenueRepository venueRepository;
     private final ArtistRepository artistRepository;
@@ -89,7 +92,7 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new ResourceNotFoundException("Evento no encontrado"));
 
         // Un evento no publicado solo lo ven STAFF/ADMIN; para el resto es como si no existiera.
-        if (event.getStatus() != EventStatus.PUBLISHED && !authorizationService.canSeeUnpublishedEvents()) {
+        if (!PUBLIC_STATUSES.contains(event.getStatus()) && !authorizationService.canSeeUnpublishedEvents()) {
             throw new ResourceNotFoundException("Evento no encontrado");
         }
         return eventMapper.toResponse(event);
@@ -158,7 +161,7 @@ public class EventServiceImpl implements EventService {
         boolean canSeeUnpublished = authorizationService.canSeeUnpublishedEvents();
         return eventRepository.findByArtistsStageNameIgnoreCase(stageName)
                 .stream()
-                .filter(event -> canSeeUnpublished || event.getStatus() == EventStatus.PUBLISHED)
+                .filter(event -> canSeeUnpublished || PUBLIC_STATUSES.contains(event.getStatus()))
                 .map(eventMapper::toSummary)
                 .toList();
     }
