@@ -21,7 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(ArtistController.class)
-class ArtistControllerTest {
+class ArtistControllerTest extends SecuredControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
