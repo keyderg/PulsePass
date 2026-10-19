@@ -3,8 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Ambiente | Local: app en `localhost:8080`, base `pulsepass_e2e` (Docker `postgres:18-alpine`), perfil `local` |
-| Ejecutor | (completar) |
-| Fecha | (completar; los logs de las primeras corridas llevan fecha 2026-10-18) |
+| Fecha | 2026-10-18/19 |
 | Colección | `postman/PulsePass-Manual-E2E.postman_collection.json` (sin scripts) |
 
 > No incluir JWT, contraseñas ni datos privados en esta bitácora ni en capturas.
