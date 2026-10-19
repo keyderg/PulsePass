@@ -1,0 +1,6 @@
+# Nunca versionar secretos ni evidencias con datos sensibles
+*.env
+*secret*
+*.local.json
+seed-e2e.local.sql
+capturas/
