@@ -10,6 +10,9 @@ import { useSede } from '../funcionalidades/sedes/hooks'
 import { tieneEstado } from '../lib/apiError'
 import { mensajeDeError } from '../lib/mensajesError'
 import { RUTAS } from '../lib/rutas'
+import { useState } from 'react'
+import { ModalCompra } from '../funcionalidades/tickets/componentes/ModalCompra'
+import type { TicketType } from '../funcionalidades/tickets/tipos'
 
 const volver = 'flex w-fit items-center gap-1.5 text-sm font-medium text-marca-600 hover:underline dark:text-marca-500'
 
@@ -17,7 +20,7 @@ export default function DetalleEvento() {
   const { eventCode } = useParams()
   const consulta = useEvento(eventCode)
   const sede = useSede(consulta.data?.venueCode)
-
+    const [tipoCompra, setTipoCompra] = useState<TicketType | null>(null)
   const enlaceVolver = (
       <Link to={RUTAS.eventos} className={volver}>
         <IconoFlechaIzquierda className="size-4" />
@@ -52,9 +55,16 @@ export default function DetalleEvento() {
               <Tarjeta className="overflow-hidden p-0 lg:col-span-2">
                 <CabeceraEvento evento={consulta.data} sede={sede.data} />
               </Tarjeta>
-              <PanelCompra evento={consulta.data} />
+                <PanelCompra evento={consulta.data} onComprar={setTipoCompra} />
             </div>
         ) : null}
+          {consulta.data && tipoCompra ? (
+              <ModalCompra
+                  evento={consulta.data}
+                  tipo={tipoCompra}
+                  onCerrar={() => setTipoCompra(null)}
+              />
+          ) : null}
       </div>
   )
 }
