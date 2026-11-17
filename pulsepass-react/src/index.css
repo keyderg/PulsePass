@@ -1,0 +1,26 @@
+@import 'tailwindcss';
+
+/* Modo oscuro por clase `.dark` en <html>: inicia según prefers-color-scheme (index.html) y se puede alternar. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-marca-50: #eef2ff;
+  --color-marca-500: #6366f1;
+  --color-marca-600: #4f46e5;
+  --color-marca-700: #4338ca;
+  --color-acento-500: #f43f5e; /* llamadas a la acción secundarias / destacados */
+  --font-titulo: 'Poppins', ui-sans-serif, system-ui, sans-serif;
+  --font-cuerpo: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-slate-50 font-cuerpo text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-titulo;
+  }
+}
