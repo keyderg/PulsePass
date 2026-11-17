@@ -44,8 +44,7 @@ export const EventSummaryListSchema = z.array(EventSummaryResponseSchema)
 export const CrearEventoSchema = z.object({
     eventCode: z.string().trim().min(1, 'Ingresa el código del evento'),
     name: z.string().trim().min(1, 'Ingresa el nombre del evento'),
-    description: z.string().max(1000, 'La descripción admite máximo 1000 caracteres'),
-    category: z.enum(EVENT_CATEGORIES, { error: 'Selecciona una categoría' }),
+    description: z.string().max(1000, 'La descripción admite máximo 1000 caracteres').optional(),    category: z.enum(EVENT_CATEGORIES, { error: 'Selecciona una categoría' }),
     eventDate: z.string().min(1, 'Selecciona la fecha y hora del evento'),
     minimumAge: z
         .number({ error: 'Ingresa la edad mínima' })
@@ -61,3 +60,9 @@ export interface EventoTarjeta extends EventSummaryResponse {
     ciudad?: string
     categoria?: EventCategory
 }
+
+/** Búsqueda por código de evento (formularios de ADMIN y STAFF). */
+export const BuscarEventoSchema = z.object({
+    codigo: z.string().trim().min(1, 'Ingresa el código del evento').max(50, 'Máximo 50 caracteres'),
+})
+export type BuscarEventoForm = z.infer<typeof BuscarEventoSchema>

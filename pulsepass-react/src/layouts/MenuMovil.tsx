@@ -1,7 +1,9 @@
-import { Link, NavLink } from 'react-router'
+import { Link } from 'react-router'
 import { Boton, clasesBoton } from '../componentes/Boton'
 import { RUTAS } from '../lib/rutas'
-import { claseEnlaceNav, type EnlaceNav } from './enlaces'
+import type { EnlaceNav } from './enlaces'
+import { EnlaceNavegacion } from './EnlaceNavegacion'
+
 
 interface MenuMovilProps {
     enlaces: EnlaceNav[]
@@ -20,9 +22,7 @@ export function MenuMovil({ enlaces, autenticado, onNavegar, onSalir }: MenuMovi
             <ul className="flex flex-col">
                 {enlaces.map((e) => (
                     <li key={e.a}>
-                        <NavLink to={e.a} onClick={onNavegar} className={claseEnlaceNav}>
-                            {e.etiqueta}
-                        </NavLink>
+                        <EnlaceNavegacion enlace={e} onClick={onNavegar} />
                     </li>
                 ))}
             </ul>

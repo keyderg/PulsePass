@@ -51,6 +51,7 @@ export function AuthProvider({ children, ahora = Date.now }: AuthProviderProps) 
             const me = await obtenerMe(signal)
             const perfil = await obtenerUsuarioPorUsername(me.username, signal)
             queryClient.setQueryData(claves.usuario(perfil.email), perfil)
+            queryClient.setQueryData(claves.usuarioPorUsername(me.username), perfil)
             return {
                 id: me.id,
                 username: me.username,

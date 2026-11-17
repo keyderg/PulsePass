@@ -4,7 +4,12 @@ import { RUTAS } from '../lib/rutas'
 export interface EnlaceNav {
     etiqueta: string
     a: string
+    /** Si se define, decide cuándo el enlace se resalta (por defecto: la ruta o sus subrutas). */
+    activa?: (pathname: string) => boolean
 }
+
+/** "Tickets pagados" apunta a la ruta sin código, pero también está activo con /staff/eventos/:code/tickets. */
+const esTicketsPagados = (pathname: string) => /^\/staff\/eventos(\/[^/]+)?\/tickets\/?$/.test(pathname)
 
 export const ENLACES_PUBLICOS: EnlaceNav[] = [
     { etiqueta: 'Eventos', a: RUTAS.eventos },
@@ -12,12 +17,17 @@ export const ENLACES_PUBLICOS: EnlaceNav[] = [
     { etiqueta: 'Sedes', a: RUTAS.sedes },
 ]
 
-/** Tabla 8.4. "Tickets pagados" se añade aquí cuando la Parte 6 defina cómo elegir el evento. */
+/** Tabla 8.4. */
 export function enlacesDeRol(roles: readonly Rol[]): EnlaceNav[] {
     const enlaces: EnlaceNav[] = []
     if (roles.includes('USER')) enlaces.push({ etiqueta: 'Mis tickets', a: RUTAS.misTickets })
     if (roles.includes('STAFF') || roles.includes('ADMIN')) {
         enlaces.push({ etiqueta: 'Validar ingreso', a: RUTAS.validacion })
+        enlaces.push({
+            etiqueta: 'Tickets pagados',
+            a: RUTAS.ticketsPagados(),
+            activa: esTicketsPagados,
+        })
     }
     if (roles.includes('ADMIN')) {
         enlaces.push({ etiqueta: 'Administrar eventos', a: RUTAS.adminEventos })

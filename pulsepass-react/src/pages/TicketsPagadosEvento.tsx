@@ -1,9 +1,7 @@
-import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { Aviso } from '../componentes/Aviso'
 import { BadgeEstadoTicket } from '../componentes/Badge'
 import { Boton } from '../componentes/Boton'
-import { Campo } from '../componentes/Campo'
 import { Cargando } from '../componentes/Cargando'
 import { CodigoTexto } from '../componentes/CodigoTexto'
 import { EstadoError } from '../componentes/EstadoError'
@@ -11,6 +9,7 @@ import { EstadoVacio } from '../componentes/EstadoVacio'
 import { PrecioCOP } from '../componentes/PrecioCOP'
 import { Tabla } from '../componentes/Tabla'
 import { Tarjeta } from '../componentes/Tarjeta'
+import { BuscadorEventoPorCodigo } from '../funcionalidades/eventos/componentes/BuscadorEventoPorCodigo'
 import { NombreTitular } from '../funcionalidades/tickets/componentes/NombreTitular'
 import { useTicketsPagadosPorEvento, useUsarTicket } from '../funcionalidades/tickets/hooks'
 import type { TicketResponse } from '../funcionalidades/tickets/tipos'
@@ -21,15 +20,8 @@ import { RUTAS } from '../lib/rutas'
 export default function TicketsPagadosEvento() {
   const { eventCode = '' } = useParams()
   const navigate = useNavigate()
-  const [entrada, setEntrada] = useState(eventCode)
   const consulta = useTicketsPagadosPorEvento(eventCode)
   const usar = useUsarTicket()
-
-  function ir(e: React.SyntheticEvent) {
-    e.preventDefault()
-    const limpio = entrada.trim()
-    if (limpio) void navigate(RUTAS.ticketsPagados(limpio))
-  }
 
   const tickets = consulta.data ?? []
   const accion = (t: TicketResponse) => (
@@ -45,18 +37,16 @@ export default function TicketsPagadosEvento() {
   return (
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-end justify-between gap-4">
-          <h1 className="text-3xl font-bold">Tickets pagados · {eventCode}</h1>
-          <form onSubmit={ir} className="flex items-end gap-2">
-            <Campo
-                etiqueta="Evento"
-                value={entrada}
-                onChange={(e) => setEntrada(e.target.value)}
-                autoComplete="off"
-            />
-            <Boton type="submit" variante="secundario">
-              Ir
-            </Boton>
-          </form>
+          <h1 className="text-3xl font-bold">
+            {eventCode ? `Tickets pagados · ${eventCode}` : 'Tickets pagados'}
+          </h1>
+          <BuscadorEventoPorCodigo
+              etiqueta="Evento"
+              textoBoton="Ir"
+              valorInicial={eventCode}
+              onBuscar={(codigo) => void navigate(RUTAS.ticketsPagados(codigo))}
+              className="flex items-start gap-2"
+          />
         </div>
 
         {usar.isSuccess ? (
@@ -70,7 +60,10 @@ export default function TicketsPagadosEvento() {
             </Aviso>
         ) : null}
 
-        {consulta.isPending ? <Cargando /> : null}
+        {eventCode && consulta.isPending ? <Cargando /> : null}
+        {!eventCode ? (
+            <EstadoVacio mensaje="Ingresa el código de un evento para ver sus tickets pagados" />
+        ) : null}
         {tieneEstado(consulta.error, 404) ? (
             <EstadoVacio mensaje="Evento no encontrado" />
         ) : consulta.isError ? (

@@ -27,7 +27,7 @@ describe('transversales', () => {
     })
 
     describe('TEST-FE-GEN-003: navbar muestra enlaces según rol', () => {
-        const principal = () => screen.getByRole('navigation', { name: 'Principal' })
+        const principal = () => screen.getByRole('navigation', { name: 'Principal' }) // existe desde el primer render
 
         it('anónimo', async () => {
             renderizarRutas(rutas)
@@ -41,7 +41,7 @@ describe('transversales', () => {
             sembrarSesion(['USER'])
             renderizarRutas(rutas)
             expect(await screen.findByRole('button', { name: 'Andrea' })).toBeInTheDocument()
-            expect(within(principal()).getByRole('link', { name: 'Mis tickets' })).toBeInTheDocument()
+            expect(await within(principal()).findByRole('link', { name: 'Mis tickets' })).toBeInTheDocument()
             expect(within(principal()).queryByRole('link', { name: 'Validar ingreso' })).toBeNull()
             expect(within(principal()).queryByRole('link', { name: 'Administrar eventos' })).toBeNull()
             expect(screen.queryByRole('link', { name: 'Registrarse' })).toBeNull()
@@ -51,7 +51,7 @@ describe('transversales', () => {
             sembrarSesion(['STAFF'])
             renderizarRutas(rutas)
             expect(await screen.findByRole('button', { name: 'Andrea' })).toBeInTheDocument()
-            expect(within(principal()).getByRole('link', { name: 'Validar ingreso' })).toBeInTheDocument()
+            expect(await within(principal()).findByRole('link', { name: 'Validar ingreso' })).toBeInTheDocument()
             expect(within(principal()).queryByRole('link', { name: 'Mis tickets' })).toBeNull()
             expect(within(principal()).queryByRole('link', { name: 'Administrar eventos' })).toBeNull()
         })
@@ -60,9 +60,9 @@ describe('transversales', () => {
             sembrarSesion(['ADMIN'])
             renderizarRutas(rutas)
             expect(await screen.findByRole('button', { name: 'Andrea' })).toBeInTheDocument()
-            expect(within(principal()).getByRole('link', { name: 'Validar ingreso' })).toBeInTheDocument()
+            expect(await within(principal()).findByRole('link', { name: 'Validar ingreso' })).toBeInTheDocument()
             expect(
-                within(principal()).getByRole('link', { name: 'Administrar eventos' }),
+                await within(principal()).findByRole('link', { name: 'Administrar eventos' }),
             ).toBeInTheDocument()
         })
     })

@@ -15,8 +15,10 @@ export const RUTAS = {
     confirmacionCompra: (ticketCode: string) =>
         `/compra/confirmacion/${encodeURIComponent(ticketCode)}`,
     validacion: '/staff/validacion',
-    ticketsPagados: (eventCode: string) =>
-        `/staff/eventos/${encodeURIComponent(eventCode)}/tickets`,
+    ticketsPagados: (eventCode?: string) =>
+        eventCode
+            ? `/staff/eventos/${encodeURIComponent(eventCode)}/tickets`
+            : '/staff/eventos/tickets',
     adminEventos: '/admin/eventos',
     adminNuevoEvento: '/admin/eventos/nuevo',
     adminEvento: (eventCode: string) => `/admin/eventos/${encodeURIComponent(eventCode)}`,
@@ -26,7 +28,7 @@ export const RUTAS = {
 /** Patrones relativos para declarar rutas en router.tsx. */
 export const PATRONES = {
     eventos: 'eventos',
-    evento: 'eventos/:eventCode',
+    evento: 'eventos/:eventCode?',
     artistas: 'artistas',
     artista: 'artistas/:id',
     sedes: 'sedes',
@@ -38,7 +40,7 @@ export const PATRONES = {
     ticket: 'mis-tickets/:ticketCode',
     confirmacionCompra: 'compra/confirmacion/:ticketCode',
     validacion: 'staff/validacion',
-    ticketsPagados: 'staff/eventos/:eventCode/tickets',
+    ticketsPagados: 'staff/eventos/:eventCode?/tickets',
     adminEventos: 'admin/eventos',
     adminNuevoEvento: 'admin/eventos/nuevo',
     adminEvento: 'admin/eventos/:eventCode',

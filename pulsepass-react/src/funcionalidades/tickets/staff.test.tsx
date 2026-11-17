@@ -74,4 +74,67 @@ describe('tickets pagados por evento', () => {
         expect(within(tabla).getByText('TKT-91B07D')).toBeInTheDocument()
         await waitFor(() => expect(screen.getByText('Total: 2')).toBeInTheDocument())
     })
+    it('sin código: muestra el selector y no consulta la API', async () => {
+        let llamadas = 0
+        server.use(
+            http.get('*/api/events/:code/tickets/paid', () => {
+                llamadas += 1
+                return HttpResponse.json([])
+            }),
+        )
+        sembrarSesion(['STAFF'])
+        renderizarRutas(rutas, { entradas: ['/staff/eventos/tickets'] })
+
+        expect(
+            await screen.findByText('Ingresa el código de un evento para ver sus tickets pagados'),
+        ).toBeInTheDocument()
+        expect(screen.getByLabelText('Evento')).toBeInTheDocument()
+        expect(llamadas).toBe(0)
+    })
+
+    it('navbar: "Tickets pagados" lleva a la ruta sin código y queda activo con código', async () => {
+        server.use(http.get('*/api/events/:code/tickets/paid', () => HttpResponse.json([])))
+        sembrarSesion(['STAFF'])
+        const { user, router } = renderizarRutas(rutas, { entradas: ['/staff/validacion'] })
+
+        const nav = await screen.findByRole('navigation', { name: 'Principal' })
+        await user.click(within(nav).getByRole('link', { name: 'Tickets pagados' }))
+        await waitFor(() => expect(router.state.location.pathname).toBe('/staff/eventos/tickets'))
+
+        await user.type(await screen.findByLabelText('Evento'), 'CMF-2026')
+        await user.click(screen.getByRole('button', { name: 'Ir' }))
+        await waitFor(() =>
+            expect(router.state.location.pathname).toBe('/staff/eventos/CMF-2026/tickets'),
+        )
+        expect(within(nav).getByRole('link', { name: 'Tickets pagados' })).toHaveAttribute(
+            'aria-current',
+            'page',
+        )
+    })
+
+    it('navbar: USER no ve "Tickets pagados"', async () => {
+        sembrarSesion(['USER'])
+        renderizarRutas(rutas, { entradas: ['/'] })
+        const nav = await screen.findByRole('navigation', { name: 'Principal' })
+        // esperar a que la sesión cargue (un USER sí ve "Mis tickets")
+        expect(await within(nav).findByRole('link', { name: 'Mis tickets' })).toBeInTheDocument()
+        expect(within(nav).queryByRole('link', { name: 'Tickets pagados' })).not.toBeInTheDocument()
+    })
+
+    it('navbar: ADMIN ve "Tickets pagados"', async () => {
+        sembrarSesion(['ADMIN'])
+        renderizarRutas(rutas, { entradas: ['/'] })
+        const nav = await screen.findByRole('navigation', { name: 'Principal' })
+        expect(await within(nav).findByRole('link', { name: 'Tickets pagados' })).toBeInTheDocument()
+    })
+})
+
+describe('selector de evento (RHF + zod)', () => {
+    it('código vacío → error de formulario y sin navegar', async () => {
+        sembrarSesion(['STAFF'])
+        const { user, router } = renderizarRutas(rutas, { entradas: ['/staff/eventos/tickets'] })
+        await user.click(await screen.findByRole('button', { name: 'Ir' }))
+        expect(await screen.findByText('Ingresa el código del evento')).toBeInTheDocument()
+        expect(router.state.location.pathname).toBe('/staff/eventos/tickets')
+    })
 })

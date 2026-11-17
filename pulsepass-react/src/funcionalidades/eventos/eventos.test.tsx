@@ -52,6 +52,18 @@ describe('cartelera', () => {
         renderizarRutas(rutas, { entradas: ['/eventos?artista=Solar%20Beat'] })
         expect(await screen.findByRole('link', { name: /Caribbean Music Fest 2026/ })).toBeInTheDocument()
     })
+
+    it('op. 10: ?artista= resuelve el artista por nombre y enlaza a su detalle', async () => {
+        renderizarRutas(rutas, { entradas: ['/eventos?artista=Solar%20Beat'] })
+        const enlace = await screen.findByRole('link', { name: 'Solar Beat' })
+        expect(enlace).toHaveAttribute('href', '/artistas/1')
+    })
+
+    it('op. 10: artista inexistente (404) → sin aviso de artista, la página no se rompe', async () => {
+        renderizarRutas(rutas, { entradas: ['/eventos?artista=Nadie'] })
+        expect(await screen.findByRole('heading', { name: 'Cartelera' })).toBeInTheDocument()
+        await waitFor(() => expect(screen.queryByText(/Mostrando eventos de/)).not.toBeInTheDocument())
+    })
 })
 
 describe('detalle de evento', () => {

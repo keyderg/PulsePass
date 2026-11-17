@@ -2,7 +2,7 @@ import { screen } from '@testing-library/react'
 import type { UserEvent } from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { CLAVE_ANDREA, TOKEN_ANDREA } from '../../test/mocks/datos'
-import { contarPeticiones, renderizarRutas } from '../../test/Utils'
+import { contarPeticiones, renderizarRutas, sembrarSesion } from '../../test/Utils'
 import { rutas } from '../../Router'
 import { CLAVE_SESION } from './almacen'
 
@@ -95,5 +95,18 @@ describe('Registro', () => {
             'El usuario o correo ya está registrado',
         )
         expect(screen.queryByText(/Email already registered/)).not.toBeInTheDocument()
+    })
+})
+
+describe('Cuenta (op. 13 y 14)', () => {
+    it('el perfil sale de la caché sembrada al restaurar la sesión: by-username se pide una sola vez', async () => {
+        sembrarSesion(['USER'])
+        const peticiones = contarPeticiones()
+        renderizarRutas(rutas, { entradas: ['/cuenta'] })
+
+        expect(await screen.findByRole('heading', { name: /Andrea/ })).toBeInTheDocument()
+        peticiones.detener()
+        const porUsername = peticiones.urls.filter((u) => u.includes('/api/users/by-username'))
+        expect(porUsername).toHaveLength(1)
     })
 })

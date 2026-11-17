@@ -9,6 +9,7 @@ const EstadoNavegacionSchema = z.object({
         .optional(),
     motivo: z.literal('expirada').optional(),
     registrado: z.boolean().optional(),
+    creado: z.boolean().optional(),
 })
 export type EstadoNavegacion = z.infer<typeof EstadoNavegacionSchema>
 

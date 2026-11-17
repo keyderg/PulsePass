@@ -1,11 +1,12 @@
 import { useRef, useState } from 'react'
 import type { KeyboardEvent } from 'react'
-import { Link, NavLink } from 'react-router'
+import { Link } from 'react-router'
 import { clasesBoton } from '../componentes/Boton'
 import { IconoCerrar, IconoMenu, IconoMusica } from '../componentes/Iconos'
 import { useAuth, useSalir } from '../funcionalidades/auth/hooks'
 import { RUTAS } from '../lib/rutas'
-import { claseEnlaceNav, enlacesDeRol, ENLACES_PUBLICOS } from './enlaces'
+import { enlacesDeRol, ENLACES_PUBLICOS } from './enlaces'
+import { EnlaceNavegacion } from './EnlaceNavegacion'
 import { MenuMovil } from './MenuMovil'
 import { MenuUsuario } from './MenuUsuario'
 
@@ -40,17 +41,15 @@ export function Navbar() {
                     to={RUTAS.inicio}
                     className="flex items-center gap-2 font-titulo text-lg font-bold focus-visible:outline-2 focus-visible:outline-marca-600"
                 >
-          <span className="flex size-8 items-center justify-center rounded-lg bg-marca-600 text-white">
-            <IconoMusica className="size-4" />
-          </span>
+                    <span className="flex size-8 items-center justify-center rounded-lg bg-marca-600 text-white">
+                        <IconoMusica className="size-4" />
+                    </span>
                     PulsePass
                 </Link>
 
                 <nav aria-label="Principal" className="hidden items-center gap-1 md:flex">
                     {enlaces.map((e) => (
-                        <NavLink key={e.a} to={e.a} className={claseEnlaceNav}>
-                            {e.etiqueta}
-                        </NavLink>
+                        <EnlaceNavegacion key={e.a} enlace={e} />
                     ))}
                 </nav>
 

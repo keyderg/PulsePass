@@ -1,8 +1,17 @@
-import { useQueries, useQuery } from '@tanstack/react-query'
-import { claves, STALE } from '../../lib/queryKeys'
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
+import { claves, invalidaciones, STALE } from '../../lib/queryKeys'
+import type { ArtistResponse } from '../artistas/tipos'
 import { useSedesActivas } from '../sedes/hooks'
-import { obtenerEvento, obtenerEventosPorArtista, obtenerEventosPublicados } from './api'
+import {
+    asociarArtista,
+    crearEvento,
+    obtenerEvento,
+    obtenerEventosPorArtista,
+    obtenerEventosPublicados,
+    publicarEvento,
+} from './api'
 import type { EventoTarjeta, EventSummaryResponse } from './tipos'
+
 
 export function useEventosPublicados() {
     return useQuery({
@@ -46,4 +55,51 @@ export function useEventosConDetalle(resumenes: EventSummaryResponse[] | undefin
         ciudad: sedes.data?.find((s) => s.name === e.venueName)?.city,
         categoria: detalles[i]?.data?.category,
     }))
+}
+
+/** Códigos de los eventos creados en esta sesión (GAP-01). Vive en la caché: se limpia al cerrar sesión. */
+export function useEventosCreados() {
+    return useQuery({
+        queryKey: claves.eventosCreados(),
+        queryFn: () => Promise.resolve<string[]>([]),
+        initialData: [] as string[],
+        staleTime: Infinity,
+    })
+}
+
+export function useCrearEvento() {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: crearEvento,
+        onSuccess: (evento) => {
+            invalidaciones.crearEvento(qc, evento)
+            qc.setQueryData<string[]>(claves.eventosCreados(), (previos) => [
+                evento.eventCode,
+                ...(previos ?? []).filter((c) => c !== evento.eventCode),
+            ])
+        },
+    })
+}
+
+export function usePublicarEvento() {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: publicarEvento,
+        onSuccess: (evento) => {
+            qc.setQueryData(claves.evento(evento.eventCode), evento)
+            void invalidaciones.publicarEvento(qc, evento.eventCode)
+        },
+    })
+}
+
+export function useAsociarArtista() {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (v: { eventCode: string; artista: ArtistResponse }) =>
+            asociarArtista(v.eventCode, v.artista.id),
+        onSuccess: (evento, v) => {
+            qc.setQueryData(claves.evento(evento.eventCode), evento)
+            void invalidaciones.asociarArtista(qc, v.eventCode, v.artista.stageName)
+        },
+    })
 }

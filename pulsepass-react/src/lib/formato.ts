@@ -52,3 +52,8 @@ export function formatearFechaHora(iso: string): string {
 export function formatearNumero(n: number): string {
     return numeroCO.format(n)
 }
+
+/** <input type="datetime-local"> entrega "2026-12-12T20:00"; el backend recibe LocalDateTime con segundos. */
+export function normalizarFechaHora(valor: string): string {
+    return valor.length === 16 ? `${valor}:00` : valor
+}

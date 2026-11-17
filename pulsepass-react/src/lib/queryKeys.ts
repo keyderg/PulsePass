@@ -17,6 +17,7 @@ export const claves = {
     ticket: (ticketCode: string) => ['ticket', ticketCode] as const,
     ticketsPagados: (eventCode: string) => ['tickets', 'pagados', eventCode] as const,
     sesion: () => ['sesion'] as const,
+    eventosCreados: () => ['admin', 'eventos-creados'] as const,
 }
 
 const SEGUNDO = 1000
