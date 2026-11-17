@@ -69,7 +69,9 @@ describe('sesión', () => {
 
         await user.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
 
-        expect(await screen.findByRole('heading', { name: 'Inicio' })).toBeInTheDocument()
+        expect(
+            await screen.findByRole('heading', { name: 'Descubre los mejores eventos' }),
+        ).toBeInTheDocument()
         expect(router.state.location.pathname).toBe('/')
         expect(sessionStorage.getItem(CLAVE_SESION)).toBeNull()
         expect(obtenerTokenActual()).toBeNull()

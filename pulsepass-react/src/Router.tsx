@@ -7,6 +7,7 @@ import SoloAnonimo from './layouts/SoloAnonimo'
 import ErrorPagina from './pages/ErrorPagina'
 import Inicio from './pages/Inicio'
 import { PATRONES } from './lib/rutas'
+import { Cargando } from './componentes/Cargando'
 
 type Carga = () => Promise<{ default: ComponentType }>
 
@@ -19,6 +20,7 @@ export const rutas: RouteObject[] = [
         path: '/',
         element: <Layout />,
         errorElement: <ErrorPagina />,
+        hydrateFallbackElement: <Cargando className="mx-auto max-w-md p-8" />,
         children: [
             { index: true, element: <Inicio /> },
             { path: PATRONES.eventos, ...perezosa(() => import('./pages/CatalogoEventos')) },
