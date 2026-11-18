@@ -43,7 +43,8 @@ class UserServiceImplTest {
                 "Doe",
                 "123456789",
                 "Santa Marta",
-                LocalDate.now().plusDays(1) // Fecha futura inválida
+                LocalDate.now().plusDays(1),
+                "ClaveDePrueba2026!"
         );
 
         // ACT & ASSERT
@@ -65,7 +66,8 @@ class UserServiceImplTest {
                 "Doe",
                 "123456789",
                 "Santa Marta",
-                LocalDate.of(1995, 5, 15)
+                LocalDate.of(1995, 5, 15),
+                "ClaveDePrueba2026!"
         );
 
         when(userRepository.existsByUsername("existing_user")).thenReturn(true);
@@ -88,7 +90,8 @@ class UserServiceImplTest {
                 "Diaz",
                 "3001234567",
                 "Santa Marta",
-                LocalDate.of(2000, 1, 1)
+                LocalDate.of(2000, 1, 1),
+                "ClaveDePrueba2026!"
         );
 
         when(userRepository.existsByUsername(request.username())).thenReturn(false);
@@ -119,7 +122,8 @@ class UserServiceImplTest {
     @Test
     void testUser004_SuccessfulRegistrationReturnsUserResponse() {
         RegisterUserRequest request = new RegisterUserRequest(
-                "new_user", "new@example.com", "Calixto", "Diaz", "3001234567", "Santa Marta", LocalDate.of(2000, 1, 1)
+                "new_user", "new@example.com", "Calixto", "Diaz", "3001234567", "Santa Marta", LocalDate.of(2000, 1, 1),"ClaveDePrueba2026!"
+
         );
 
         when(userRepository.existsByUsername(request.username())).thenReturn(false);

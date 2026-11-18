@@ -35,7 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(EventController.class)
-class EventControllerTest {
+class EventControllerTest extends SecuredControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -82,7 +82,7 @@ class EventControllerTest {
     void create_validRequest_returns201() throws Exception {
         when(eventService.create(validRequest())).thenReturn(event(EventStatus.DRAFT, Set.of()));
 
-        mockMvc.perform(post("/api/events")
+        mockMvc.perform(post("/api/events").with(asAdmin())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(VALID_JSON))
                 .andExpect(status().isCreated())
@@ -98,7 +98,7 @@ class EventControllerTest {
     // TEST-CTRL-EVT-002
     @Test
     void create_invalidRequest_returns400WithoutCallingService() throws Exception {
-        mockMvc.perform(post("/api/events")
+        mockMvc.perform(post("/api/events").with(asAdmin())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -123,7 +123,7 @@ class EventControllerTest {
     // Extra: edad mínima negativa
     @Test
     void create_negativeMinimumAge_returns400WithoutCallingService() throws Exception {
-        mockMvc.perform(post("/api/events")
+        mockMvc.perform(post("/api/events").with(asAdmin())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(VALID_JSON.replace("\"minimumAge\": 18", "\"minimumAge\": -1")))
                 .andExpect(status().isBadRequest())
@@ -135,7 +135,7 @@ class EventControllerTest {
     // Extra: categoría que no existe en el enum
     @Test
     void create_unknownCategory_returns400WithoutCallingService() throws Exception {
-        mockMvc.perform(post("/api/events")
+        mockMvc.perform(post("/api/events").with(asAdmin())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(VALID_JSON.replace("\"MUSIC\"", "\"NOT_A_CATEGORY\"")))
                 .andExpect(status().isBadRequest())
@@ -150,7 +150,7 @@ class EventControllerTest {
         when(eventService.create(validRequest()))
                 .thenThrow(new DuplicateResourceException("Event code already exists: CMF-2026"));
 
-        mockMvc.perform(post("/api/events")
+        mockMvc.perform(post("/api/events").with(asAdmin())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(VALID_JSON))
                 .andExpect(status().isConflict())
@@ -216,7 +216,7 @@ class EventControllerTest {
     void publish_validTransition_returns200() throws Exception {
         when(eventService.publish("CMF-2026")).thenReturn(event(EventStatus.PUBLISHED, Set.of()));
 
-        mockMvc.perform(patch("/api/events/CMF-2026/publish"))
+        mockMvc.perform(patch("/api/events/CMF-2026/publish").with(asAdmin()))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.eventCode").value("CMF-2026"))
@@ -231,7 +231,7 @@ class EventControllerTest {
         when(eventService.publish("CMF-2026"))
                 .thenThrow(new BusinessRuleException("Event cannot be published: CMF-2026"));
 
-        mockMvc.perform(patch("/api/events/CMF-2026/publish"))
+        mockMvc.perform(patch("/api/events/CMF-2026/publish").with(asAdmin()))
                 .andExpect(status().isConflict())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.status").value(409))
@@ -248,7 +248,7 @@ class EventControllerTest {
         when(eventService.publish("XXX"))
                 .thenThrow(new ResourceNotFoundException("Event not found: XXX"));
 
-        mockMvc.perform(patch("/api/events/XXX/publish"))
+        mockMvc.perform(patch("/api/events/XXX/publish").with(asAdmin()))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Event not found: XXX"));
 
@@ -261,7 +261,7 @@ class EventControllerTest {
         when(eventService.addArtist("CMF-2026", 1L))
                 .thenReturn(event(EventStatus.DRAFT, Set.of(solarBeat())));
 
-        mockMvc.perform(post("/api/events/CMF-2026/artists/1"))
+        mockMvc.perform(post("/api/events/CMF-2026/artists/1").with(asAdmin()))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.eventCode").value("CMF-2026"))
@@ -278,7 +278,7 @@ class EventControllerTest {
         when(eventService.addArtist("CMF-2026", 1L))
                 .thenThrow(new BusinessRuleException("Artist already associated to event: CMF-2026"));
 
-        mockMvc.perform(post("/api/events/CMF-2026/artists/1"))
+        mockMvc.perform(post("/api/events/CMF-2026/artists/1").with(asAdmin()))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.status").value(409))
                 .andExpect(jsonPath("$.message").value("Artist already associated to event: CMF-2026"));
@@ -292,7 +292,7 @@ class EventControllerTest {
         when(eventService.addArtist("CMF-2026", 99L))
                 .thenThrow(new ResourceNotFoundException("Artist not found: 99"));
 
-        mockMvc.perform(post("/api/events/CMF-2026/artists/99"))
+        mockMvc.perform(post("/api/events/CMF-2026/artists/99").with(asAdmin()))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Artist not found: 99"));
 
@@ -302,7 +302,7 @@ class EventControllerTest {
     // Extra: artistId no numérico -> 400
     @Test
     void addArtist_nonNumericArtistId_returns400WithoutCallingService() throws Exception {
-        mockMvc.perform(post("/api/events/CMF-2026/artists/abc"))
+        mockMvc.perform(post("/api/events/CMF-2026/artists/abc").with(asAdmin()))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.details.artistId").value("Invalid value"));
 
@@ -331,5 +331,25 @@ class EventControllerTest {
                 .andExpect(jsonPath("$.details.stageName").value("Parameter is required"));
 
         verify(eventService, never()).findByArtist(anyString());
+    }
+
+    @Test
+    void security_anonymous_cannotCreatePublishOrAddArtist_gets401() throws Exception {
+        mockMvc.perform(post("/api/events").contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(patch("/api/events/CMF-2026/publish")).andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/events/CMF-2026/artists/1")).andExpect(status().isUnauthorized());
+
+        org.mockito.Mockito.verifyNoInteractions(eventService);
+    }
+
+    @Test
+    void security_userRole_cannotCreatePublishOrAddArtist_gets403() throws Exception {
+        mockMvc.perform(post("/api/events").with(asUser()).contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(patch("/api/events/CMF-2026/publish").with(asUser())).andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/events/CMF-2026/artists/1").with(asUser())).andExpect(status().isForbidden());
+
+        org.mockito.Mockito.verifyNoInteractions(eventService);
     }
 }
