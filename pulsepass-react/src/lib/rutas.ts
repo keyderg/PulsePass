@@ -28,7 +28,7 @@ export const RUTAS = {
 /** Patrones relativos para declarar rutas en router.tsx. */
 export const PATRONES = {
     eventos: 'eventos',
-    evento: 'eventos/:eventCode?',
+    evento: 'eventos/:eventCode',
     artistas: 'artistas',
     artista: 'artistas/:id',
     sedes: 'sedes',

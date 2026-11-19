@@ -56,10 +56,11 @@ export const CrearEventoSchema = z.object({
 export type CreateEventRequest = z.infer<typeof CrearEventoSchema>
 
 /** Vista compuesta para tarjetas: resumen + categoría (detalle) + ciudad (sedes activas). */
-export interface EventoTarjeta extends EventSummaryResponse {
-    ciudad?: string
-    categoria?: EventCategory
-}
+export const EventoTarjetaSchema = EventSummaryResponseSchema.extend({
+    ciudad: z.string().optional(),
+    categoria: EventCategorySchema.optional(),
+})
+export type EventoTarjeta = z.infer<typeof EventoTarjetaSchema>
 
 /** Búsqueda por código de evento (formularios de ADMIN y STAFF). */
 export const BuscarEventoSchema = z.object({

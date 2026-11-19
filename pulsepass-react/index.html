@@ -11,10 +11,14 @@
           rel="stylesheet"
   />
   <script>
-    // Modo oscuro inicial según prefers-color-scheme (evita parpadeo).
-    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      document.documentElement.classList.add('dark')
-    }
+    // Modo oscuro inicial (evita parpadeo): preferencia guardada en la sesión o, si no hay, prefers-color-scheme.
+    try {
+      var guardado = sessionStorage.getItem('pulsepass-tema')
+      var oscuro = guardado
+        ? guardado === 'oscuro'
+        : window.matchMedia('(prefers-color-scheme: dark)').matches
+      document.documentElement.classList.toggle('dark', oscuro)
+    } catch (e) {}
   </script>
 </head>
 <body>

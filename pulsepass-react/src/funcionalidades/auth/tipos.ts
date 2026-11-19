@@ -25,13 +25,14 @@ export const AuthenticatedUserResponseSchema = z.object({
 export type AuthenticatedUserResponse = z.infer<typeof AuthenticatedUserResponseSchema>
 
 /** Identidad de la sesión: /auth/me (id, username, roles) + perfil por username (email, nombre). */
-export interface UsuarioAutenticado {
-    id: number
-    username: string
-    email: string
-    nombre: string
-    roles: Rol[]
-}
+export const UsuarioAutenticadoSchema = z.object({
+    id: z.number(),
+    username: z.string(),
+    email: z.string(),
+    nombre: z.string(),
+    roles: z.array(RolSchema),
+})
+export type UsuarioAutenticado = z.infer<typeof UsuarioAutenticadoSchema>
 
 export type Sesion =
     | { estado: 'cargando' }

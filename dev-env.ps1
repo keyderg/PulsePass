@@ -1,4 +1,5 @@
 $env:PULSEPASS_CORS_ORIGINS = "http://localhost:5173"
+$env:DB_PASSWORD = "1234"
 $bytes = New-Object byte[] 32
 $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
 $rng.GetBytes($bytes); $rng.Dispose()

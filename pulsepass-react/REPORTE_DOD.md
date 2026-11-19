@@ -76,3 +76,22 @@ El PRD dice: *"No se considera completa la Fase 5 si existe una operación de la
 6. Revisión visual: móvil 390 px, responsive desde 360 px, modo oscuro y navegación por teclado.
 7. Comparar cada página con su imagen de `diseno.zip` (DoD #14).
 8. Confirmar que cada página tiene prueba de sus estados de carga, vacío y error (QT-FE-001).
+
+
+## 4. Correcciones posteriores a la auditoría
+
+Esta sección actualiza las secciones 1 a 3 donde difieran.
+
+| Hallazgo | Acción |
+|----------|--------|
+| Op. 10 y 14 sin forma clara de invocarse | Ya se invocan: `CatalogoEventos` usa `useArtistaPorNombre` y `Cuenta` usa `useUsuarioPorUsername`. Cuentan como cubiertas. |
+| DoD #5: formularios de búsqueda por código | Ya usan RHF + zod (`BuscadorEventoPorCodigo` con `BuscarEventoSchema`). Sin cambios. |
+| Falta barra de compra fija en móvil (DES-07) | `PanelCompra` renderiza una barra `fixed inset-x-0 bottom-0 md:hidden` con "Comprar" / "Iniciar sesión"; `DetalleEvento` añade `pb-20 md:pb-0`. Test: `barraCompra.test.tsx`. |
+| Falta alternar modo oscuro (FR-FE-GEN-004) | `lib/tema.ts` + `layouts/BotonTema.tsx` (en la Navbar, escritorio y móvil). La preferencia se guarda en `sessionStorage` y `index.html` la aplica antes de pintar. Test: `tema.test.tsx`. |
+| 10 tests en `Interactivos.tsx` no se ejecutaban | Renombrado a `Interactivos.test.tsx`. |
+| Archivo `env.example` sin punto | Renombrado a `.env.example`. |
+| Restos de la etapa 2 | Eliminados `PantallaPrueba.tsx`, `PantallaPrueba.test.tsx` y `PaginaPendiente.tsx`. |
+| `eventos/:eventCode?` con parámetro opcional | Ahora `eventos/:eventCode`. |
+| `UsuarioAutenticado` y `EventoTarjeta` como `interface` | Ahora `z.object` + `z.infer` (`UsuarioAutenticadoSchema`, `EventoTarjetaSchema`). |
+
+Pendiente de verificar en local: `npm run lint`, `npm run build` y `npm test` (los cambios solo se comprobaron a nivel de sintaxis TypeScript).
